@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Partnergewinnungsplan · FinanzCloud-Partner</title>
+<!--
+  PARTNERGEWINNUNGSPLAN — eigenständige Seite, einfach im Browser öffnen.
+  Bankshop / CEB Bankshop AG · spielerischer Verdienst-Rechner zur Partnergewinnung.
+  Beispielrechnung, keine Verdienstgarantie. Alle Daten leben nur im Browser (state).
+  "Partner werden" ist ein Platzhalter (Toast); echten CRM-Absprung hängen die Entwickler an.
+-->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+:root{
+  --ink:#0a142e; --ocean:#122a63; --cloud:#2e9bf0; --pulse:#3fe0c7;
+  --gold:#f6b43c; --paper:#eef4fb; --line:rgba(255,255,255,.12);
+  --txt:#eaf1fb; --muted:#9fb3d6; --warn:#ff9b6a;
+}
+*{box-sizing:border-box;}
+html,body{margin:0; min-height:100%;}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif; color:var(--txt);
+  -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(120% 80% at 80% -10%, rgba(63,224,199,.16), transparent 60%),
+    radial-gradient(120% 80% at -10% 110%, rgba(46,155,240,.20), transparent 55%),
+    linear-gradient(180deg,#0a142e 0%, #0b1a3f 100%);
+  background-attachment:fixed;
+}
+.wrap{max-width:520px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:0 18px 32px;}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif; font-weight:700; line-height:1.08; letter-spacing:-.01em; margin:0;}
+p{margin:0; color:var(--muted); line-height:1.5;}
+.num{font-family:'Space Grotesk',sans-serif; font-variant-numeric:tabular-nums;}
+
+/* Kopf / DNA-Strang */
+.top{position:sticky; top:0; z-index:5; padding:16px 0 12px;
+  background:linear-gradient(180deg,rgba(10,20,46,.96),rgba(10,20,46,.6) 70%,transparent); backdrop-filter:blur(6px);}
+.brand{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+.brand .logo{font-family:'Space Grotesk'; font-weight:700; font-size:15px; letter-spacing:.02em;}
+.brand .logo b{color:var(--cloud);} .brand .logo i{font-style:normal; color:var(--pulse);}
+.pts{font-family:'Space Grotesk'; font-weight:600; font-size:13px; color:var(--pulse);
+  background:rgba(63,224,199,.1); border:1px solid rgba(63,224,199,.3); padding:5px 10px; border-radius:999px;}
+.strand{display:flex; align-items:center; gap:6px;}
+.seg{flex:1; height:4px; border-radius:99px; background:rgba(255,255,255,.1);}
+.seg.on{background:linear-gradient(90deg,var(--cloud),var(--pulse));}
+.node{width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.18); flex:0 0 auto; transition:all .4s;}
+.node.on{background:var(--pulse); box-shadow:0 0 0 3px rgba(63,224,199,.18),0 0 12px rgba(63,224,199,.6);}
+.node.cur{background:var(--cloud); box-shadow:0 0 0 4px rgba(46,155,240,.25);}
+
+/* Screen */
+.screen{flex:1; display:flex; flex-direction:column; justify-content:center; padding:8px 0 4px; animation:slideIn .45s cubic-bezier(.2,.7,.2,1);}
+@keyframes slideIn{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;}}
+.eyebrow{font-family:'Space Grotesk'; font-weight:600; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--pulse); margin-bottom:10px;}
+.lead{font-size:15px; color:var(--muted); margin-top:10px;}
+.card{background:rgba(255,255,255,.045); border:1px solid var(--line); border-radius:18px; padding:18px; margin-top:16px;}
+
+/* Buttons */
+.btn{font-family:'Space Grotesk'; font-weight:600; font-size:16px; border:0; cursor:pointer; width:100%;
+  padding:15px 18px; border-radius:14px; color:#06122c; background:linear-gradient(90deg,var(--pulse),var(--cloud)); transition:transform .12s, filter .2s;}
+.btn:hover{filter:brightness(1.06);} .btn:active{transform:scale(.985);}
+.btn.ghost{background:transparent; color:var(--txt); border:1px solid var(--line);}
+.btn.gold{background:linear-gradient(90deg,#ffd27a,var(--gold)); color:#3a2600;}
+.btn:disabled{opacity:.45; cursor:not-allowed;}
+.btnrow{display:flex; gap:10px; margin-top:16px;}
+.back{background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;padding:10px 0;font-family:'Inter';width:100%;}
+.back:hover{color:var(--txt);}
+
+/* Slider */
+.field{margin:18px 0;}
+.field .lab{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+.field .lab span{font-size:14px; color:var(--txt);}
+.field .lab .val{font-family:'Space Grotesk'; font-weight:700; font-size:18px; color:var(--pulse);}
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:99px; background:rgba(255,255,255,.14); outline:none; margin:0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:24px; height:24px; border-radius:50%; background:#fff; border:5px solid var(--cloud); box-shadow:0 2px 10px rgba(0,0,0,.4); cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:5px solid var(--cloud);cursor:pointer;}
+input[type=text],input[type=email],input[type=tel]{width:100%; background:rgba(255,255,255,.06); border:1px solid var(--line); border-radius:12px; padding:13px 14px; color:var(--txt); font-size:15px; font-family:'Inter';}
+input::placeholder{color:#6f82a8;}
+input:focus{outline:2px solid var(--cloud); outline-offset:1px;}
+
+/* Choices */
+.choices{display:grid; gap:9px; margin-top:6px;}
+.choices.two{grid-template-columns:1fr 1fr;}
+.chip{font-family:'Inter'; text-align:left; background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:12px; padding:13px 15px; color:var(--txt); font-size:14.5px; cursor:pointer; transition:.15s;}
+.chip:hover{border-color:rgba(63,224,199,.5);}
+.chip.sel{background:rgba(63,224,199,.13); border-color:var(--pulse); color:#fff;}
+
+/* Ergebnis */
+.res{margin-top:18px; background:rgba(46,155,240,.08); border:1px solid rgba(46,155,240,.25); border-radius:16px; padding:16px;}
+.res .rh{font-family:'Space Grotesk'; font-weight:600; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--cloud); margin-bottom:12px;}
+.stat{display:flex; justify-content:space-between; align-items:baseline; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.07);}
+.stat:last-child{border-bottom:0;}
+.stat .k{font-size:13.5px; color:var(--muted); max-width:62%;}
+.stat .v{font-family:'Space Grotesk'; font-weight:700; font-size:18px; color:var(--txt); text-align:right;}
+.stat .v.warn{color:var(--warn);}
+.assume{font-size:11.5px; color:#7286ac; margin-top:12px; line-height:1.5;}
+.ptsgain{margin-top:14px; text-align:center; font-family:'Space Grotesk'; font-weight:600; color:var(--pulse); font-size:15px;}
+
+/* Auswertung */
+.ring{display:block; margin:6px auto 4px;}
+.ringlabel{text-align:center; margin-bottom:8px;}
+.ringlabel .big{font-family:'Space Grotesk'; font-weight:700; font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--pulse);}
+.bar{margin:13px 0;}
+.bar .bl{display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px;}
+.bar .bl b{font-family:'Space Grotesk'; color:var(--txt);}
+.track{height:9px; border-radius:99px; background:rgba(255,255,255,.1); overflow:hidden;}
+.fill{height:100%; border-radius:99px; background:linear-gradient(90deg,var(--cloud),var(--pulse)); width:0; transition:width 1s cubic-bezier(.2,.8,.2,1);}
+.fill.low{background:linear-gradient(90deg,#ff7a59,var(--gold));}
+.compare{text-align:center; margin-top:20px; font-size:14.5px; color:var(--txt);}
+.compare b{font-family:'Space Grotesk'; color:var(--pulse); font-size:17px;}
+.typ{text-align:center; font-family:'Space Grotesk'; font-weight:700; font-size:24px; margin:4px 0 2px;
+  background:linear-gradient(90deg,var(--pulse),var(--cloud)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
+
+/* KI */
+.ki{white-space:pre-wrap; font-size:14.5px; line-height:1.6; color:var(--txt);}
+.spin{width:22px;height:22px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--pulse);border-radius:50%;animation:spin 1s linear infinite;display:inline-block;vertical-align:middle;margin-right:10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Bonus */
+.bonusbar{height:16px; border-radius:99px; background:rgba(255,255,255,.1); overflow:hidden; margin:10px 0;}
+.bonusfill{height:100%; background:linear-gradient(90deg,#ffd27a,var(--gold)); transition:width .8s cubic-bezier(.2,.8,.2,1);}
+.bonusval{text-align:center; font-family:'Space Grotesk'; font-weight:700; font-size:34px; color:var(--gold);}
+.row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 0; border-bottom:1px solid rgba(255,255,255,.08);}
+.row:last-child{border-bottom:0;}
+.row .rl{font-size:14px;} .row .ra{font-family:'Space Grotesk'; font-weight:600; color:var(--gold); font-size:14px;}
+.mini{font-family:'Space Grotesk'; font-weight:600; font-size:13px; padding:8px 14px; border-radius:10px; border:1px solid var(--pulse); background:rgba(63,224,199,.12); color:var(--pulse); cursor:pointer; white-space:nowrap;}
+.mini.done{border-color:rgba(255,255,255,.15); background:rgba(255,255,255,.06); color:var(--muted); cursor:default;}
+.sublabel{font-family:'Space Grotesk'; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--cloud); margin-bottom:4px;}
+
+.foot{text-align:center; font-size:11px; color:#5f7197; margin-top:24px; line-height:1.5;}
+.toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:30; background:#06122c; border:1px solid var(--pulse); color:var(--txt); padding:12px 18px; border-radius:12px; font-size:14px; box-shadow:0 10px 40px rgba(0,0,0,.5); animation:slideIn .3s;}
+
+@media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important;} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast-host"></div>
+<script>
+/* ============================================================
+   Partnergewinnungsplan — eigenständige Seite (nur im Browser öffnen)
+   Bankshop / CEB Bankshop AG · FinanzCloud-Partner
+   Spielerische Verdienst-Simulation. Beispielrechnung, keine Verdienstgarantie.
+   Alle Daten leben nur im Browser (Variable `state`). Kein Tracking, keine Persistenz.
+   ============================================================ */
+
+const AUTOS=[{leasingrate:218},{leasingrate:243},{leasingrate:373}];
+function minAutoRate(){ const r=AUTOS.map(a=>Number(a.leasingrate)).filter(x=>x>0); return r.length?Math.min.apply(null,r):0; }
+
+const eur = n => (isFinite(n)?Math.round(n):0).toLocaleString("de-DE")+" €";
+
+function h(tag, props, children){
+  const e=document.createElement(tag);
+  if(props) for(const k in props){
+    const val=props[k];
+    if(val==null) continue;
+    if(k==="class") e.className=val;
+    else if(k==="html") e.innerHTML=val;
+    else if(k==="style") e.setAttribute("style",val);
+    else if(k.slice(0,2)==="on" && typeof val==="function") e.addEventListener(k.slice(2).toLowerCase(),val);
+    else e.setAttribute(k,val);
+  }
+  (children||[]).forEach(c=>{ if(c==null||c===false) return; e.appendChild(typeof c==="object"?c:document.createTextNode(String(c))); });
+  return e;
+}
+
+function toast(msg){
+  const host=document.getElementById("toast-host");
+  host.innerHTML="";
+  host.appendChild(h("div",{class:"toast"},[msg]));
+  setTimeout(()=>{ host.innerHTML=""; }, 2200);
+}
+
+const state = { pKunden:1, pPartner1:2, pPartner2:3, pProdPartner:1 };
+
+function slider(label,key,min,max,step,fmt,oninput){
+  const valSpan=h("span",{class:"val"});
+  const setLbl=v=>valSpan.textContent=fmt?fmt(v):v;
+  setLbl(state[key]);
+  const input=h("input",{type:"range",min:min,max:max,step:step||1});
+  input.value=state[key];
+  input.addEventListener("input",()=>{ state[key]=Number(input.value); setLbl(state[key]); if(oninput) oninput(); });
+  return h("div",{class:"field"},[ h("div",{class:"lab"},[ h("span",null,[label]), valSpan ]), input ]);
+}
+
+function partnerChart(monthly){
+  const n=12, gap=5, W=300, H=120, baseY=H-18, bw=(W-(n-1)*gap)/n;
+  const maxFrac=1;
+  let s='';
+  for(let m=1;m<=n;m++){
+    const frac=m/n, bh=Math.max(3,(H-30)*frac/maxFrac), x=(m-1)*(bw+gap), y=baseY-bh;
+    const last=m===n;
+    s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="'+(last?"var(--gold)":"url(#pg)")+'"/>';
+  }
+  [1,6,12].forEach(m=>{ const x=(m-1)*(bw+gap)+bw/2; s+='<text x="'+x.toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle" fill="#9fb3d6" style="font-family:Inter;font-size:9px">M'+m+'</text>'; });
+  return '<svg width="100%" viewBox="0 0 '+W+' '+H+'"><defs><linearGradient id="pg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#2e9bf0"/><stop offset="1" stop-color="#3fe0c7"/></linearGradient></defs>'+s+'</svg>';
+}
+
+function screenPartner(){
+  const monthlyEl=h("div",{class:"num",style:"font-family:Space Grotesk;font-weight:700;font-size:34px;color:var(--gold)"});
+  const activeEl=h("span",{class:"ra"});
+  const passiveEl=h("span",{class:"ra"});
+  const yearEl=h("span",{style:"font-family:Space Grotesk;font-weight:700;font-size:22px;color:var(--pulse)"});
+  const ampelEl=h("div",{style:"font-size:12.5px;font-weight:600;margin-top:10px"});
+  const chartEl=h("div",{style:"margin-top:6px"});
+
+  const update=()=>{
+    const aktiv=state.pKunden>=1;
+    const aktivEink=state.pKunden*400;
+    const l1=state.pPartner1*state.pProdPartner*400;
+    const l2=state.pPartner2*state.pProdPartner*400;
+    const passive=aktiv?Math.round(l1*0.20+l2*0.02):0;
+    const monthly=aktivEink+passive;
+    monthlyEl.textContent=eur(monthly);
+    activeEl.textContent=eur(aktivEink);
+    passiveEl.innerHTML=aktiv?eur(passive):'<span style="color:#6b7c9e">ruht</span>';
+    yearEl.textContent="~"+eur(monthly*12);
+    ampelEl.innerHTML=aktiv
+      ? '<span style="color:var(--pulse)">● Aktivstatus erfüllt – deine passive Beteiligung läuft.</span>'
+      : '<span style="color:var(--gold)">● Aktivstatus offen – mind. 1 Abschluss/Monat (3/Quartal) schaltet die passive Beteiligung frei.</span>';
+    chartEl.innerHTML=partnerChart(monthly);
+  };
+
+  const ergebnis=h("div",{class:"card",style:"text-align:center"},[
+    monthlyEl,
+    h("div",{style:"color:var(--muted);font-size:13px;margin-bottom:10px"},["Mögliches Einkommen pro Monat"]),
+    h("div",{class:"row"},[ h("span",{class:"rl",style:"color:var(--muted)"},["Dein aktives Einkommen (Abschlüsse × 400 €)"]), activeEl ]),
+    h("div",{class:"row"},[ h("span",{class:"rl",style:"color:var(--muted)"},["Deine passive Beteiligung (20 % / 2 %)"]), passiveEl ]),
+    ampelEl
+  ]);
+
+  const verlauf=h("div",{class:"card"},[
+    h("div",{class:"rh"},["So entwickelt es sich über 12 Monate"]),
+    chartEl,
+    h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-top:8px"},[
+      h("span",{style:"font-size:13px;color:var(--muted)"},["Nach 12 Monaten"]), yearEl
+    ])
+  ]);
+
+  const regler=h("div",{class:"card"});
+  regler.appendChild(h("div",{class:"rh"},["Spiel dein Potenzial durch"]));
+  regler.appendChild(slider("Eigene Abschlüsse / Monat","pKunden",0,8,1,v=>v+" × 400 €",update));
+  regler.appendChild(slider("Direkte Partner","pPartner1",0,15,1,v=>v+" Partner",update));
+  regler.appendChild(slider("Partner deiner Partner","pPartner2",0,40,1,v=>v+"",update));
+  regler.appendChild(slider("Abschlüsse je Partner / Monat","pProdPartner",0,5,1,v=>v+"",update));
+
+  update();
+
+  return h("div",{class:"screen"},[
+    h("div",{class:"eyebrow"},["FinanzCloud-Partner"]),
+    h("h2",{style:"font-size:26px"},["Dein Verdienst-Potenzial"]),
+    h("p",{class:"lead"},["Du hilfst Menschen, ihre Finanzen in der Cloud zu erfassen, und platzierst bis zu zwei zulassungsfreie Premiumprodukte – Edelmetall-Sparplan und (nach Schulung) Vermögensverwaltung. Pro vollständigem Datensatz mit platziertem Produkt: 400 €."]),
+    ergebnis,
+    verlauf,
+    regler,
+    h("div",{class:"card",style:"border-color:rgba(63,224,199,.3)"},[
+      h("div",{style:"font-family:Space Grotesk;font-weight:700;font-size:14px;color:var(--pulse);margin-bottom:4px"},["Alle gleichgestellt – nur Umsatz zählt"]),
+      h("p",{style:"font-size:12.5px;color:#cdd9ee;line-height:1.45;margin:0"},["Kein Karrieresystem, keine Stufen. Du verdienst an deinen eigenen Abschlüssen und passiv an der echten Produktion deiner geworbenen Partner (20 %) und deren Partner (2 %) – nie fürs bloße Anwerben. Die passive Beteiligung setzt deinen eigenen Aktivstatus voraus. Dein Auto refinanziert sich bereits ab einem eigenen Abschluss im Monat (ab ~"+eur(minAutoRate())+"/Mon.)."])
+    ]),
+    h("button",{class:"btn gold",style:"margin-top:6px",onClick:()=>toast("Im echten System: Partner-Anfrage an euer CRM")},["Partner werden"]),
+    h("p",{class:"foot"},["Beispielrechnung, keine Verdienstgarantie. Tatsächliche Einnahmen hängen von echten Abschlüssen ab; Stornohaftung und Aktivstatus gelten. Erfassung & Abrechnung laufen später über euer CRM."])
+  ]);
+}
+
+function render(){
+  const app=document.getElementById("app");
+  app.innerHTML="";
+  app.appendChild(screenPartner());
+}
+render();
+
+</script>
+</body>
+</html>
